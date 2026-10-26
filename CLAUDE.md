@@ -2,6 +2,7 @@
 
 ## הפרויקט
 - אפליקציית בדיחות בעברית: כותבים נושא ומקבלים בדיחה מ-GPT-5, דרך פונקציה ב-Vercel. אפשר להתקין אותה כ-PWA.
+- מ-Milestone 4: בדיחה אקראית ממאגר בגיליון Google. מ-Milestone 5: בדיחות ה-AI נשמרות ב-Supabase, עם "צחקתי" ו"הכי מצחיקות".
 - מסמכי האיפיון נמצאים ב-`spec/`: PRD, MVP, product-10-definitions, MILESTONES, ARCHITECTURE, tech-stack, DESIGN, וגם course-stack (חוקי הקורס) ותמונות הייחוס.
 - תיקיית `assets/` נשארת בשורש, כי האפליקציה משתמשת בה. משתמשים בקבצים כמו שהם.
 - במקרה של סתירה, המסמכים ב-`spec/` קובעים. לא חורגים מ-course-stack.md בלי לשאול קודם.
@@ -19,9 +20,21 @@
 - מפתח ה-production נשמר אצלי ב-Vercel, מסוג Secret, בסביבות Production ו-Preview.
 - את מפתח ה-dev אני מדביק בעצמי ב-`.env.local`.
 - `.claude/settings.json` חוסם קריאה של `.env` ושל `.env.*`. אסור לעקוף את החסימה, גם לא דרך shell (cat, type, Get-Content וכדומה).
-- `.env.example` מכיל רק את השורה `OPENAI_API_KEY=`, בלי ערך ובלי הערות.
 - `.gitignore` מתעלם מ-`.env`, מ-`.env.*`, מ-`.vercel` ומ-`node_modules`, עם החריגה `!.env.example`.
-- הקוד קורא את המפתח רק מ-`process.env.OPENAI_API_KEY`, ורק בתוך `api/joke.js`.
+- `.env.example` מכיל רק את השורות `OPENAI_API_KEY=` ו-`SUPABASE_SECRET_KEY=`, בלי ערכים ובלי הערות.
+- הקוד קורא את מפתח OpenAI רק מ-`process.env.OPENAI_API_KEY`, ורק בתוך `api/joke.js`.
+- הקוד קורא את המפתח הסודי של Supabase רק מ-`process.env.SUPABASE_SECRET_KEY`, ורק בתוך `lib/supabase.js`. את המפתח הזה אני שם בעצמי ב-Vercel, מסוג Secret.
+
+## נתונים (מ-Milestone 4)
+- גיליון Google לקריאה בלבד: `api/random.js` קורא אותו כ-CSV מ-`process.env.SHEET_CSV_URL` (Config). את קישור הגיליון, גם את קישור העריכה, לא שומרים באף קובץ.
+- Supabase לשמירה: טבלה אחת, `public.jokes`. ‏RLS דולק בלי policy, ‏grant רק ל-service_role. הכתובת מ-`process.env.SUPABASE_URL` (Config).
+- רק הפונקציות בתיקיית `api` מדברות עם הגיליון ועם Supabase, דרך לקוח אחד ב-`lib/supabase.js`. הדף מדבר רק עם `/api`, ואין בו כתובת או מפתח של Supabase ולא קישור לגיליון.
+- טקסט מהנתונים מוצג בדף עם textContent.
+- שינוי במבנה הנתונים: מציגים לי את ה-SQL לפני ההרצה, שומרים אותו גם בתיקיית `db/`, ואחרי ההרצה מריצים `get_advisors` ומסבירים בעברית.
+- לא מקבלים הצעה של Supabase להוסיף policy או grant ל-anon.
+
+## Service worker
+- בכל מיילסטון מעלים את גרסת המטמון ב-`sw.js` (`joke-v2` ב-Milestone 4, ‏`joke-v3` ב-Milestone 5).
 
 ## Git ופריסה
 - ריפו ציבורי: https://github.com/Eyalg1980/joke-app, ענף `main` בלבד.
@@ -46,4 +59,4 @@
 - GPT-5 נכבה ב-11.12.2026. שם המודל נקרא מ-`OPENAI_MODEL`, וברירת המחדל היא `gpt-5`. מחליפים מודל דרך Vercel, בלי לגעת בקוד.
 - המודל מסרב לנושא: מציגים את מה שהמודל החזיר, כמו שהוא.
 - מגבלת ההוצאה ב-OpenAI מספיקה כהגנה, יחד עם נושא עד 100 תווים ו-`max_output_tokens`.
-- מותר שאותה בדיחה תחזור. בלי שמירה ובלי היסטוריה.
+- מותר שאותה בדיחה תחזור. בלי היסטוריה למשתמש. (מ-Milestone 5 בדיחות ה-AI נשמרות, רק בשביל "צחקתי" ו"הכי מצחיקות".)
