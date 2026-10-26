@@ -30,3 +30,9 @@
 2. OpenAI, ב-API keys: מפתח production בשם `joke-in-a-click`.
 3. Vercel, ב-Environment Variables: `OPENAI_API_KEY`, סוג Secret, בסביבות Production ו-Preview. ואז Redeploy.
 4. רשות, הרצה מקומית: מפתח `joke-in-a-click-dev` ב-`.env.local`, ואז `vercel dev`.
+
+## פריסה בפועל
+- הפרויקט `joke-app` נוצר ב-Vercel מה-CLI, מחובר לריפו, עם Framework Preset: Other. כל push ל-main נפרס לבד.
+- הכתובת החיה: https://joke-app-ebon-nu.vercel.app
+- `OPENAI_API_KEY` שמור ב-Vercel כ-Secret, ב-Production וב-Preview. נוסף ביד, לא דרך Claude.
+- נבדק בכתובת החיה: POST עם "חתולים" מחזיר "המפתח: נמצא", ‏GET מחזיר 405, וב-Logs יש שורה `joke request` לכל בקשה.
