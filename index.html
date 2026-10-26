@@ -209,6 +209,95 @@
       font-weight: 600;
     }
 
+    /* "צחקתי": גלולה קטנה בתוך הבועה, רק מתחת לבדיחת AI */
+    .laugh-btn {
+      align-self: flex-start;
+      min-height: 44px;
+      padding: 6px 18px;
+      font: 600 18px var(--ui-font);
+      color: var(--ink);
+      background: var(--sun);
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      box-shadow: 0 4px 0 var(--ink);
+      cursor: pointer;
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+
+    .laugh-btn[hidden] { display: none; }
+
+    .laugh-btn:active,
+    .laugh-btn:disabled {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+
+    .laugh-btn:disabled { cursor: default; }
+
+    .laugh-btn:focus-visible {
+      outline: 4px solid var(--blue);
+      outline-offset: 3px;
+    }
+
+    /* "הכי מצחיקות": כרטיס לבן מתחת לבועה */
+    .top {
+      margin-top: 10px;
+      padding: 18px 20px 14px;
+      background: var(--paper);
+      border: 3px solid var(--ink);
+      border-radius: 28px;
+      box-shadow: 6px 6px 0 var(--ink);
+      transform: rotate(0.8deg);
+    }
+
+    .top h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .top-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .top-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 2px dashed var(--hint);
+    }
+
+    .top-list li:first-child { border-top: 0; }
+
+    .top-text {
+      flex: 1;
+      margin: 0;
+      font-family: var(--joke-font);
+      font-size: 18px;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .top-count {
+      flex: none;
+      padding: 2px 10px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--sun);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .top-note {
+      margin: 0;
+      font-size: 16px;
+      color: var(--ink-soft);
+    }
+
     footer {
       margin-top: auto;
       padding-top: 10px;
@@ -250,6 +339,13 @@
     <section class="bubble" id="bubble" data-state="idle" aria-label="הבדיחה">
       <img class="mascot" id="mascot" src="assets/mascot-idle.svg" width="120" height="112" alt="הכפתור מחייך ומחכה">
       <p class="message" id="message" aria-live="polite">לוחצים על הכפתור, והבדיחה מופיעה כאן</p>
+      <button id="laugh-btn" class="laugh-btn" type="button" hidden></button>
+    </section>
+
+    <section class="top" aria-labelledby="top-title">
+      <h2 id="top-title">הכי מצחיקות</h2>
+      <ol class="top-list" id="top-list"></ol>
+      <p class="top-note" id="top-note">טוען...</p>
     </section>
 
     <footer>מיישם AI ואוטומציה · 53500</footer>
@@ -263,6 +359,12 @@
     const bubble = document.getElementById('bubble');
     const mascot = document.getElementById('mascot');
     const message = document.getElementById('message');
+    const laughButton = document.getElementById('laugh-btn');
+    const topList = document.getElementById('top-list');
+    const topNote = document.getElementById('top-note');
+
+    // ה-id של בדיחת ה-AI שמוצגת עכשיו. null: אין כפתור "צחקתי"
+    let jokeId = null;
 
     const STATES = {
       idle:  { img: 'mascot-idle.svg',  alt: 'הכפתור מחייך ומחכה', button: 'תנו לי בדיחה!' },
@@ -280,6 +382,8 @@
       mascot.src = 'assets/' + s.img;
       mascot.alt = s.alt;
       message.textContent = text;
+      jokeId = null;
+      laughButton.hidden = true;
       button.textContent = from === 'ai' ? s.button : STATES.idle.button;
       randomButton.textContent = from === 'random' && state !== 'joke' && state !== 'idle' ? s.button : RANDOM_LABEL;
       const busy = state === 'think';
@@ -305,6 +409,7 @@
         const data = await res.json().catch(() => ({}));
         if (res.ok && typeof data.joke === 'string') {
           setState('joke', data.joke);
+          if (typeof data.id === 'string') showLaugh(data.id);
         } else {
           setState('error', data.error || 'משהו השתבש. נסו שוב.');
         }
@@ -329,6 +434,70 @@
         setState('error', 'אין חיבור לשרת כרגע. נסו שוב.', 'random');
       }
     });
+
+    function showLaugh(id) {
+      jokeId = id;
+      laughButton.textContent = '😂 צחקתי · 0';
+      laughButton.disabled = false;
+      laughButton.hidden = false;
+    }
+
+    laughButton.addEventListener('click', async () => {
+      const id = jokeId;
+      if (!id || laughButton.disabled) return;
+      laughButton.disabled = true;
+      laughButton.textContent = '😂 צחקתי · ...';
+
+      let text = 'לא נשמר';
+      try {
+        const res = await fetch('/api/laugh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Number.isInteger(data.laughs)) {
+          text = `😂 צחקתי · ${data.laughs}`;
+          loadTop();
+        }
+      } catch {}
+      // בינתיים אולי כבר מוצגת בדיחה אחרת
+      if (jokeId === id) laughButton.textContent = text;
+    });
+
+    // "הכי מצחיקות": בפתיחת הדף ואחרי כל "צחקתי". בלי polling
+    async function loadTop() {
+      try {
+        const res = await fetch('/api/top', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data.jokes)) throw new Error(data.error);
+        renderTop(data.jokes);
+      } catch {
+        topList.replaceChildren();
+        topNote.textContent = 'הרשימה לא זמינה כרגע';
+        topNote.hidden = false;
+      }
+    }
+
+    function renderTop(jokes) {
+      const items = jokes.map((joke) => {
+        const li = document.createElement('li');
+        const text = document.createElement('p');
+        text.className = 'top-text';
+        text.textContent = joke.text;
+        const count = document.createElement('span');
+        count.className = 'top-count';
+        count.textContent = `😂 ${joke.laughs}`;
+        count.setAttribute('aria-label', `${joke.laughs} צחוקים`);
+        li.append(text, count);
+        return li;
+      });
+      topList.replaceChildren(...items);
+      topNote.textContent = 'עוד אין פה בדיחות. צחקו על משהו!';
+      topNote.hidden = items.length > 0;
+    }
+
+    loadTop();
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

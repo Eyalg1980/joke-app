@@ -4,7 +4,7 @@
 כל בדיחת AI נשמרת ב-Supabase. מתחת לבדיחה יש כפתור "צחקתי" עם מונה, ובדף יש רשימת "הכי מצחיקות". רק הפונקציות מדברות עם Supabase.
 
 ## לפני הקוד, דרך המחבר של Supabase
-- רשימת הפרויקטים: בארגון `Eyalg1980` אין עדיין אף פרויקט. צריך פרויקט אחד לפני ה-migration.
+- רשימת הפרויקטים: פרויקט אחד, `53500.5 course Project 1` (אזור Sydney). עליו רץ ה-migration.
 - ה-SQL כתוב ב-`db/create_jokes.sql`, ומוצג לאישור לפני ההרצה.
 - אחרי האישור: migration בשם `create_jokes`, עם אותו SQL בדיוק.
 - אחרי ההרצה: `get_advisors` (security ו-performance), הסבר בעברית, ועצירה עד שאני מאשר שהטבלה נעולה.
@@ -50,4 +50,20 @@
 - push, ואז Redeploy אם המשתנים נשמרו אחרי הפריסה.
 
 ## מה נבנה בפועל
-(יתעדכן בשלב הבנייה)
+- **migrations:** ‏`create_jokes`, זהה ל-`db/create_jokes.sql`. אחריו נמצא של-service_role יש גם delete, truncate, references ו-trigger, מברירת המחדל של Supabase. לכן רץ, באישור, migration שני: `restrict_jokes_service_role` (`db/restrict_jokes_service_role.sql`). עכשיו ל-service_role יש רק select, insert, update, ול-anon ול-authenticated אין כלום. ‏`get_advisors`: רק `rls_enabled_no_policy` ברמת INFO, וזה בכוונה.
+- **package.json:** ‏`@supabase/supabase-js` ‏`^2.118.0`, ו-package-lock.json.
+- **lib/supabase.js:** לפי התוכנית. חסר משתנה: שורה ב-console.error והלקוח null.
+- **api/joke.js:** ‏`saveJoke` אחרי הבדיחה. נושא ריק נשמר כ-null. כישלון: `id: null` ושורה `save joke failed` ב-console.error.
+- **api/laugh.js:** ‏uuid נבדק בביטוי רגולרי. ‏400 ו-404 עם "הבדיחה לא נמצאה.". ‏console.log `laugh: id, laughs` לכל צחוק.
+- **api/top.js:** סדר משני לפי `created_at`, כדי שבתיקו החדשה תופיע קודם. ‏Supabase לא זמין: הלקוח מנסה שוב קריאות GET כמה פעמים, ולכן השגיאה מגיעה אחרי כ-7 שניות. זה לא משפיע על הבדיחה.
+- **index.html:** ‏"😂 צחקתי · 0" בגלולה צהובה בתוך הבועה. ‏`jokeId` שומר איזו בדיחה מוצגת, וכל `setState` מסתיר את הכפתור, ולכן בדיחה מהמאגר, שגיאה או `id: null` בלי כפתור. אם התשובה של "צחקתי" מגיעה אחרי שכבר מוצגת בדיחה אחרת, לא נוגעים בכפתור. "הכי מצחיקות": כרטיס לבן מתחת לבועה, הבדיחה בכתב היד ומונה בגלולה צהובה.
+- **sw.js:** ‏`joke-v3`.
+
+## נבדק לפני ה-push
+מול OpenAI ו-Supabase מדומים במחשב, ובדפדפן Chromium:
+- בדיחת AI מחזירה `id` ומוסיפה שורה. נושא ריק נשמר כ-null.
+- "צחקתי" מעלה ל-1 וננעל. הבדיחה מופיעה ב"הכי מצחיקות" בלי רענון, מסודרת מהכי הרבה צחוקים, ובלי בדיחות עם 0.
+- ‏`/api/laugh`: לא uuid: ‏400. ‏uuid שלא קיים: ‏404. ‏GET: ‏405. ‏POST ל-`/api/top`: ‏405. ‏`/api/top` עם `Cache-Control: no-store`.
+- בדיחה מהמאגר: בלי כפתור "צחקתי".
+- ‏Supabase לא זמין: הבדיחה מגיעה עם `id: null`, בלי כפתור, ושורה ב-console.error. ‏"צחקתי" ו"הכי מצחיקות" מחזירים 500 בעברית.
+- ‏Network: רק /api. בקוד הדף אין `supabase` ואין `sb_`.
