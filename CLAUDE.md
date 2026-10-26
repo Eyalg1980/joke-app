@@ -24,8 +24,8 @@
 - הקוד קורא את המפתח רק מ-`process.env.OPENAI_API_KEY`, ורק בתוך `api/joke.js`.
 
 ## Git ופריסה
-- ריפו ציבורי: https://github.com/EyalG1980/joke-app, ענף `main` בלבד.
-- משתמש Git: EyalG1980, ‏eyalg333@gmail.com.
+- ריפו ציבורי: https://github.com/Eyalg1980/joke-app, ענף `main` בלבד.
+- משתמש Git: Eyalg1980, ‏eyalg333@gmail.com.
 - הלינק החי נמצא ב-Vercel, לא ב-GitHub Pages. ב-Milestone 1 מנחים אותי לייבא את הריפו ל-Vercel ולשמור בו את המפתח. מאז, כל push ל-main מתעדכן לבד.
 - בסוף כל שלב מספקים לי את הלינק החי.
 
