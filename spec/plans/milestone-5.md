@@ -73,3 +73,4 @@
 - ב-Vercel: ‏`SUPABASE_URL` ב-Production וב-Preview, ‏`SUPABASE_SECRET_KEY` ב-Production בלבד. ב-Preview אין שמירה ואין "צחקתי".
 - נבדק בכתובת החיה: ‏`sw.js` בגרסה `joke-v3`. ‏`/api/top` מחזיר 200 עם רשימה ריקה. ‏`/api/laugh` עם id שאינו uuid מחזיר 400, ועם uuid שלא קיים מחזיר 404, כלומר הפונקציה מדברת עם Supabase. בקוד הדף אין `supabase` ואין `sb_`.
 - נבדק מול Supabase עם המפתח הציבורי (publishable): קריאה, הוספה וקריאה ל-`add_laugh` מחזירות `42501 permission denied`.
+- אושר.
