@@ -125,6 +125,25 @@
 
     .btn[aria-busy="true"] { cursor: wait; }
 
+    /* הכפתור השני: אותה גלולה, לבנה ונמוכה יותר, כדי שהאדום יישאר הפעולה הראשית */
+    .btn-secondary {
+      min-height: 56px;
+      margin-top: -4px;
+      font-size: 20px;
+      color: var(--ink);
+      background: var(--paper);
+      box-shadow: 0 6px 0 var(--ink);
+      transform: rotate(0.8deg);
+    }
+
+    .btn-secondary:active,
+    .btn-secondary[aria-busy="true"] {
+      transform: translateY(4px) rotate(0.8deg);
+      box-shadow: 0 2px 0 var(--ink);
+    }
+
+    .btn:disabled:not([aria-busy="true"]) { opacity: 0.6; cursor: not-allowed; }
+
     .btn:focus-visible {
       outline: 4px solid var(--blue);
       outline-offset: 4px;
@@ -226,6 +245,8 @@
       <button id="joke-btn" class="btn" type="submit">תנו לי בדיחה!</button>
     </form>
 
+    <button id="random-btn" class="btn btn-secondary" type="button">בדיחה אקראית מהמאגר</button>
+
     <section class="bubble" id="bubble" data-state="idle" aria-label="הבדיחה">
       <img class="mascot" id="mascot" src="assets/mascot-idle.svg" width="120" height="112" alt="הכפתור מחייך ומחכה">
       <p class="message" id="message" aria-live="polite">לוחצים על הכפתור, והבדיחה מופיעה כאן</p>
@@ -238,6 +259,7 @@
     const form = document.getElementById('joke-form');
     const input = document.getElementById('topic');
     const button = document.getElementById('joke-btn');
+    const randomButton = document.getElementById('random-btn');
     const bubble = document.getElementById('bubble');
     const mascot = document.getElementById('mascot');
     const message = document.getElementById('message');
@@ -249,16 +271,22 @@
       error: { img: 'mascot-error.svg', alt: 'הכפתור מסוחרר',      button: 'לנסות שוב' },
     };
 
-    function setState(state, text) {
+    const RANDOM_LABEL = 'בדיחה אקראית מהמאגר';
+
+    // from: מי ביקש את הבדיחה, 'ai' או 'random'. רק הכפתור שנלחץ מחליף טקסט
+    function setState(state, text, from = 'ai') {
       const s = STATES[state];
       bubble.dataset.state = state;
       mascot.src = 'assets/' + s.img;
       mascot.alt = s.alt;
       message.textContent = text;
-      button.textContent = s.button;
+      button.textContent = from === 'ai' ? s.button : STATES.idle.button;
+      randomButton.textContent = from === 'random' && state !== 'joke' && state !== 'idle' ? s.button : RANDOM_LABEL;
       const busy = state === 'think';
       button.disabled = busy;
-      button.setAttribute('aria-busy', String(busy));
+      randomButton.disabled = busy;
+      button.setAttribute('aria-busy', String(busy && from === 'ai'));
+      randomButton.setAttribute('aria-busy', String(busy && from === 'random'));
     }
 
     form.addEventListener('submit', async (event) => {
@@ -282,6 +310,23 @@
         }
       } catch {
         setState('error', 'אין חיבור לשרת כרגע. נסו שוב.');
+      }
+    });
+
+    randomButton.addEventListener('click', async () => {
+      if (randomButton.disabled) return;
+      setState('think', 'מחפש בדיחה במאגר...', 'random');
+
+      try {
+        const res = await fetch('/api/random', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && typeof data.joke === 'string') {
+          setState('joke', data.joke, 'random');
+        } else {
+          setState('error', data.error || 'משהו השתבש. נסו שוב.', 'random');
+        }
+      } catch {
+        setState('error', 'אין חיבור לשרת כרגע. נסו שוב.', 'random');
       }
     });
 
